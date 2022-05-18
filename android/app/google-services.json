@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "398579294641",
+    "project_id": "androidbasedfishinformat-3bd05",
+    "storage_bucket": "androidbasedfishinformat-3bd05.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:398579294641:android:d4202d8daf415ebcc31d90",
+        "android_client_info": {
+          "package_name": "com.androidbasedfishinformationapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "398579294641-b2h2i6a3rqcbe3v38ed4ttos9959usfj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8mrA2RsxU1dgnLHB0SU7aIcETkuUF3Zs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "398579294641-b2h2i6a3rqcbe3v38ed4ttos9959usfj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
