@@ -11,6 +11,8 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import FishInfoScreen from '../screens/FishInfoScreen';
 import {AuthContext} from '../context/AuthContext';
 import SearchFishScreen from '../screens/SearchFishScreen';
+import ProtectedAreasScreen from '../screens/ProtectedAreasScreen';
+import ProtectedAreasScreenList from '../screens/ProtectedAreasScreenList';
 
 const Tab = createMaterialBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -34,12 +36,31 @@ const FishStack = ({navigation}) => (
   </Stack.Navigator>
 );
 
+const ProtectedAreas = ({navigation}) => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="ProtectedAreasScreenList"
+      component={ProtectedAreasScreenList}
+      options={{
+        headerShown: false,
+      }}
+    />
+    <Stack.Screen
+      name="ProtectedAreasScreen"
+      component={ProtectedAreasScreen}
+      options={{
+        title: 'Protected Areas Information',
+      }}
+    />
+  </Stack.Navigator>
+);
+
 const Navigation = () => {
   const {user, setUser, logout} = useContext(AuthContext);
   return (
     <>
       <Tab.Navigator
-        initialRouteName="Home"
+        initialRouteName="ProtectedAreasScreenList"
         activeColor="white"
         barStyle={{backgroundColor: 'tomato'}}>
         <Tab.Screen
@@ -48,7 +69,7 @@ const Navigation = () => {
           options={{
             tabBarLabel: 'Home',
             tabBarIcon: ({color}) => (
-              <FontAwesome5 name="home" color={color} size={20} />
+              <FontAwesome5 name="map-marked-alt" color={color} size={20} />
             ),
           }}
         />
@@ -64,12 +85,23 @@ const Navigation = () => {
         />
 
         <Tab.Screen
-          name="Search"
+          name="ProtectedAreas"
+          component={ProtectedAreas}
+          options={{
+            tabBarLabel: 'Protected Areas',
+            tabBarIcon: ({color}) => (
+              <FontAwesome5 name="map-signs" color={color} size={20} />
+            ),
+          }}
+        />
+
+        <Tab.Screen
+          name="Search1"
           component={SearchFishScreen}
           options={{
-            tabBarLabel: 'Search',
+            tabBarLabel: 'Favorites',
             tabBarIcon: ({color}) => (
-              <FontAwesome5 name="search" color={color} size={20} />
+              <FontAwesome5 name="heart" color={color} size={20} />
             ),
           }}
         />

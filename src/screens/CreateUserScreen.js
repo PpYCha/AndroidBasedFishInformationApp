@@ -8,7 +8,7 @@ const CreateUserScreen = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState();
-  const [typeofUser, setTypeofUser] = useState('admin');
+  const [typeofUser, setTypeofUser] = useState('user');
   const {register} = useContext(AuthContext);
   return (
     <View style={styles.container}>

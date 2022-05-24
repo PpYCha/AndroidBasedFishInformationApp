@@ -8,18 +8,27 @@ import {
   Pressable,
   Alert,
   Button,
+  Image,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import CustomButton from '../components/CustomButton';
 import firestore from '@react-native-firebase/firestore';
 import {useIsFocused} from '@react-navigation/native';
+import SearchBar from 'react-native-dynamic-search-bar';
+import {AuthContext} from '../context/AuthContext';
 
 const FishListScreen = ({navigation}) => {
+  const {user} = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
+  const [typeOfUser, setTypeOfUser] = useState('');
+  const isFocused = useIsFocused();
+
   const [fishList, setfishList] = useState();
   const [selectedId, setSelectedId] = useState(null);
-  const isFocused = useIsFocused();
   const [modalVisible, setModalVisible] = useState(false);
   const [value, setValue] = useState(null);
+  const [search, setSearch] = useState();
+  const [searchFound, setSearchFound] = useState();
 
   const getFishList = async () => {
     try {
@@ -32,8 +41,7 @@ const FishListScreen = ({navigation}) => {
             const id = doc.id;
             const {
               fishImage,
-              latitude,
-              longtitude,
+
               scientificName,
               kingdom,
               fishClass,
@@ -46,12 +54,16 @@ const FishListScreen = ({navigation}) => {
               environment,
               description,
               biology,
+
+              latitude,
+              longitude,
+              barangay,
+              municipality,
             } = doc.data();
             list.push({
               id,
               fishImage,
-              latitude,
-              longtitude,
+
               scientificName,
               kingdom,
               fishClass,
@@ -66,11 +78,17 @@ const FishListScreen = ({navigation}) => {
               biology,
               latitudeDelta: 0.01,
               longitudeDelta: 0.01,
+
+              latitude,
+              longitude,
+              barangay,
+              municipality,
             });
           });
         });
 
       setfishList(list);
+
       // console.log('data:', list);
     } catch (e) {
       console.log(e);
@@ -79,11 +97,29 @@ const FishListScreen = ({navigation}) => {
 
   useEffect(() => {
     getFishList();
+    getUserDetails();
   }, [isFocused]);
 
+  const getUserDetails = async () => {
+    await firestore()
+      .collection('users')
+      .doc(user.uid)
+      .get()
+      .then(documentSnapshot => {
+        if (documentSnapshot.exists) {
+          console.log('User Data', documentSnapshot.data());
+          const {typeofUser} = documentSnapshot.data();
+          setTypeOfUser(typeofUser);
+        }
+      });
+    console.log(typeOfUser);
+    if (loading) {
+      setLoading(false);
+    }
+  };
+
   const renderItem = ({item, index}) => {
-    console.log('selected: ', index, selectedId);
-    console.log('item:', item.id);
+    // console.log('item:', item.fishFamily);
 
     return (
       <TouchableOpacity
@@ -91,61 +127,110 @@ const FishListScreen = ({navigation}) => {
         onPress={() =>
           navigation.navigate('FishInfoScreen', {
             fishImage1: item.fishImage,
+            fishId1: item.id,
+            scientificName1: item.scientificName,
+            kingdom1: item.kingdom,
+            fishClass1: item.fishClass,
+            phylum1: item.phylum,
+            order1: item.order,
+            fishFamily1: item.fishFamily,
+            genus1: item.genus,
+            commonName1: item.commonName,
+            localName1: item.localName,
+            environment1: item.environment,
+            description1: item.description,
+            biology1: item.biology,
+            longitude1: item.longitude,
             latitude1: item.latitude,
+            latitudeDelta1: 0.01,
+            longitudeDelta1: 0.01,
+            municipality1: item.municipality,
+            barangay1: item.barangay,
           })
         }>
-        <Text style={styles.title}>
-          {item.commonName} -- {item.scientificName}
-        </Text>
+        <Image source={{uri: item.fishImage}} style={styles.image} />
+        <Text style={styles.title}>{item.localName}</Text>
       </TouchableOpacity>
     );
   };
 
-  // const handleSelectedItem = ({item}) => {
-  //   setModalVisible(true);
-  //   console.log(item);
-  //   console.log(modalVisible);
-  //   return (
-  //     <>
-  //       <Modal
-  //         animationType="slide"
-  //         transparent={true}
-  //         visible={modalVisible}
-  //         onRequestClose={() => {
-  //           Alert.alert('Modal has been closed.');
-  //           setModalVisible(!modalVisible);
-  //         }}>
-  //         <View style={styles.centeredView}>
-  //           <View style={styles.modalView}>
-  //             <Text style={styles.modalText}>{item.commonName}</Text>
-  //             <Pressable
-  //               style={[styles.button, styles.buttonClose]}
-  //               onPress={() => setModalVisible(!modalVisible)}>
-  //               <Text style={styles.textStyle}>Hide Modal</Text>
-  //             </Pressable>
-  //           </View>
-  //         </View>
-  //       </Modal>
-  //     </>
-  //   );
-  // };
+  const searchFish = async text => {
+    const list = [];
+
+    await firestore()
+      .collection('fishInfo')
+
+      .orderBy('localName')
+
+      .where('localName', '<=', search.toLowerCase())
+      .where('localName', '>=', search.toUpperCase())
+
+      .startAfter(search)
+      .endBefore(search + '\uf8ff')
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          const fishId = doc.id;
+          const {commonName, scientificName, localName} = doc.data();
+          list.push({
+            fishId,
+            commonName,
+            scientificName,
+            localName,
+          });
+          console.log(doc.id, ' => ', doc.data());
+        });
+      });
+    setfishList(list);
+    console.log('line 17:', list);
+  };
 
   return (
     <View style={styles.container}>
+      <View style={styles.topViewContainer}>
+        <SearchBar
+          style={styles.searchBar}
+          placeholder="Search local fish"
+          onSearchPress={searchFish}
+          onChangeText={text => setSearch(text)}
+          onClearPress={getFishList}
+        />
+        {typeOfUser === 'admin' ? (
+          <>
+            <CustomButton
+              text="Add Fish Info"
+              backgroundColor="green"
+              onPress={() => {
+                navigation.navigate('FishInfoScreen', {
+                  fishImage1: '',
+                  latitude1: '',
+                });
+              }}
+            />
+          </>
+        ) : (
+          <></>
+        )}
+      </View>
       <FlatList
         data={fishList}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         extraData={selectedId}
       />
-
-      <CustomButton
-        text="Add Fish Info"
-        backgroundColor="green"
-        onPress={() => {
-          navigation.navigate('FishInfoScreen');
-        }}
-      />
+      {fishList === undefined || fishList.length == 0 ? (
+        <>
+          <View>
+            <Text>No Fish Found</Text>
+          </View>
+        </>
+      ) : (
+        <>
+          <View>
+            <Text>Fish Found</Text>
+          </View>
+        </>
+      )}
     </View>
   );
 };
@@ -157,18 +242,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   item: {
-    fontSize: 10,
+    fontSize: 5,
     flex: 1,
-    padding: 10,
-    margin: 10,
+    padding: 5,
+    margin: 5,
     alignContent: 'center',
     justifyContent: 'center',
-    backgroundColor: 'gray',
+    alignItems: 'center',
+    backgroundColor: '#FF7F5F',
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
   },
   title: {
-    fontSize: 20,
     color: 'black',
     alignItems: 'center',
+    fontSize: 20,
+    marginLeft: 30,
   },
   buttonContainer: {},
 
@@ -212,5 +302,16 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: 15,
     textAlign: 'center',
+  },
+  topViewContainer: {
+    marginBottom: 10,
+  },
+  searchBar: {
+    margin: 10,
+  },
+  image: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
   },
 });

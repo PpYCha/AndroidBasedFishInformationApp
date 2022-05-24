@@ -7,10 +7,11 @@ import {
   Modal,
   Pressable,
   Platform,
+  Image,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import MapView from 'react-native-maps';
-import {Marker} from 'react-native-maps';
+import {Marker, Circle, Overlay, Polygon, Polyline} from 'react-native-maps';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import fishLogo from '../assets/fish.png';
 import {useIsFocused} from '@react-navigation/native';
@@ -20,6 +21,7 @@ const HomeScreen = () => {
   const [fishList, setfishList] = useState([]);
   const isFocused = useIsFocused();
   const [modalVisible, setModalVisible] = useState(false);
+  const [protectedAreaList, setProtectedAreaList] = useState([]);
 
   const getFishList = async () => {
     try {
@@ -35,6 +37,8 @@ const HomeScreen = () => {
               longitude,
               latitudeDelta,
               longitudeDelta,
+              barangay,
+              municipality,
               // fishImage,
               scientificName,
               kingdom,
@@ -68,6 +72,8 @@ const HomeScreen = () => {
               environment,
               description,
               biology,
+              barangay,
+              municipality,
             });
           });
         });
@@ -79,20 +85,39 @@ const HomeScreen = () => {
     }
   };
 
+  const getProtectedAreaList = async () => {
+    try {
+      const list = [];
+      await firestore()
+        .collection('protectedArea')
+        .get()
+        .then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            const id = doc.id;
+
+            const {nameOfProtected, municipality, longitude, latitude} =
+              doc.data();
+            list.push({
+              id,
+              nameOfProtected,
+              municipality,
+              latitude,
+              longitude,
+            });
+          });
+        });
+
+      setProtectedAreaList(list);
+      console.log('area:', list);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   useEffect(() => {
     getFishList();
+    getProtectedAreaList();
   }, [isFocused]);
-
-  const renderItem = ({item}) => {
-    console.log(item.latitude, item.longtitude);
-    return (
-      <>
-        <Marker coordinate={{latitude: 12.50917, longitude: 124.636618}}>
-          <CustomMarker />
-        </Marker>
-      </>
-    );
-  };
 
   const CustomMarker = () => {
     return (
@@ -105,6 +130,7 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <MapView
+        mapType="hybrid"
         style={styles.map}
         //specify our coordinates.
         initialRegion={{
@@ -113,19 +139,11 @@ const HomeScreen = () => {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}>
-        {/* <Marker
-          title={tokyoRegion.title}
-          description={tokyoRegion.description}
-          coordinate={{
-            latitude: tokyoRegion.latitude,
-            longitude: tokyoRegion.longitude,
-          }}
-        /> */}
         {fishList.map((marker, index) => {
           console.log(
             marker.latitude,
             marker.longitude,
-            index,
+            marker.id,
             marker.commonName,
           );
 
@@ -133,11 +151,23 @@ const HomeScreen = () => {
             <>
               {!isNaN(marker.latitude) && !isNaN(marker.longitude) ? (
                 <Marker
-                  key={index}
-                  title={marker.commonName}
+                  key={marker.id}
                   coordinate={{
                     latitude: Number(marker.latitude),
                     longitude: Number(marker.longitude),
+                  }}
+                  onPress={() => {
+                    Alert.alert(
+                      'Fish Info',
+                      'Fish Local Name:' +
+                        marker.localName +
+                        '\n' +
+                        'Municipality:' +
+                        marker.municipality +
+                        '\n' +
+                        'Barangay:' +
+                        marker.barangay,
+                    );
                   }}>
                   <CustomMarker />
                 </Marker>
@@ -147,7 +177,44 @@ const HomeScreen = () => {
             </>
           );
         })}
+
+        {protectedAreaList.map((item, index) => {
+          console.log('circle: ', item.latitude);
+          console.log('circle: latied: ', item.longitude);
+          return (
+            <>
+              {!isNaN(item.latitude) && !isNaN(item.longitude) ? (
+                <Circle
+                  style={styles.circle}
+                  key={index}
+                  center={{
+                    latitude: Number(item.latitude),
+                    longitude: Number(item.longitude),
+                  }}
+                  radius={250}
+                  strokeColor="red"
+                  strokeWidth={5}
+                  lineCap="square"
+                  lineJoin="bevel"
+                />
+              ) : (
+                <></>
+              )}
+            </>
+          );
+        })}
       </MapView>
+
+      <Image
+        style={{
+          height: 150,
+          width: 150,
+          position: 'absolute',
+          alignItems: 'flex-end',
+        }}
+        source={require('../assets/legend.png')}
+        resizeMode="contain"
+      />
     </View>
   );
 };
@@ -163,5 +230,8 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
+  },
+  circle: {
+    opacity: 300,
   },
 });
