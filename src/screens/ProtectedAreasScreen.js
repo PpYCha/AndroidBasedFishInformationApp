@@ -111,10 +111,12 @@ const ProtectedAreasScreen = ({navigation, route}) => {
 
   useEffect(() => {
     getUserDetails();
-    setMunicipality(municipality1);
-    setProtectedAreas(protectedAreas1);
-    setLatitude(latitude1);
-    setLongitude(longitude1);
+    try {
+      setMunicipality(municipality1);
+      setProtectedAreas(protectedAreas1);
+      setLatitude(latitude1);
+      setLongitude(longitude1);
+    } catch (error) {}
   }, []);
 
   const getUserDetails = async () => {

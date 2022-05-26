@@ -104,7 +104,13 @@ const ProtectedAreasScreenList = ({navigation}) => {
               text="Add Protected Areas Info"
               backgroundColor="green"
               onPress={() => {
-                navigation.navigate('ProtectedAreasScreen');
+                navigation.navigate('ProtectedAreasScreen', {
+                  protectedAreas1: '',
+                  protectedAreasId: '',
+                  longitude1: '',
+                  latitude1: '',
+                  municipality1: '',
+                });
               }}
             />
           </>
