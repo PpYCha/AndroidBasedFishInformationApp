@@ -6,6 +6,7 @@ import {
   Alert,
   Image,
   TouchableOpacity,
+  Button,
 } from 'react-native';
 import React, {useState, useEffect, useContext} from 'react';
 import CustomInput from '../components/CustomInput';

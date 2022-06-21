@@ -15,6 +15,7 @@ import CustomButton from '../components/CustomButton';
 import firestore from '@react-native-firebase/firestore';
 import {useIsFocused} from '@react-navigation/native';
 import SearchBar from 'react-native-dynamic-search-bar';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {AuthContext} from '../context/AuthContext';
 
 const FishListScreen = ({navigation}) => {
@@ -41,7 +42,7 @@ const FishListScreen = ({navigation}) => {
             const id = doc.id;
             const {
               fishImage,
-
+              like,
               scientificName,
               kingdom,
               fishClass,
@@ -63,7 +64,7 @@ const FishListScreen = ({navigation}) => {
             list.push({
               id,
               fishImage,
-
+              like,
               scientificName,
               kingdom,
               fishClass,
@@ -118,6 +119,22 @@ const FishListScreen = ({navigation}) => {
     }
   };
 
+  const handleLike = async (id, like) => {
+    console.log(id, like);
+    await firestore()
+      .collection('fishInfo')
+      .doc(id)
+      .update({
+        like: like,
+      })
+      .catch(error => {
+        console.log(
+          'Something went wrong with added user to firestore: ',
+          error,
+        );
+      });
+  };
+
   const renderItem = ({item, index}) => {
     // console.log('item:', item.fishFamily);
 
@@ -149,6 +166,28 @@ const FishListScreen = ({navigation}) => {
           })
         }>
         <Image source={{uri: item.fishImage}} style={styles.image} />
+        {typeof item.like === 'undefined' ? (
+          <>
+            <TouchableOpacity
+              style={{padding: 5, margin: 5}}
+              onPress={() => {
+                handleLike(item.id, 'heart');
+              }}>
+              <FontAwesome name="heart-o" color="red" size={40} />
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={{padding: 5, margin: 5}}
+              onPress={() => {
+                handleLike(item.id, 'heart');
+              }}>
+              <FontAwesome name={item.like} color="red" size={40} />
+            </TouchableOpacity>
+          </>
+        )}
+
         <Text style={styles.title}>{item.localName}</Text>
       </TouchableOpacity>
     );
